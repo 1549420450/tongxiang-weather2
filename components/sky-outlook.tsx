@@ -1,6 +1,6 @@
 import { Cloud, Sunrise, Sunset } from 'lucide-react';
 import type { CSSProperties } from 'react';
-import { glowEvent, glowScore, skySample, skyVerdict } from '../lib/sky-outlook';
+import { glowScore, upcomingGlowEvents, skySample, skyVerdict } from '../lib/sky-outlook';
 import type { WeatherData } from '../lib/weather';
 
 const stamp=(time:number)=>new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(time));
@@ -10,10 +10,11 @@ function Layers({sample}:{sample:NonNullable<ReturnType<typeof skySample>>}) {
 }
 export default function SkyOutlook({data,now,stale}:{data:WeatherData;now:number;stale:boolean}) {
   const current=skySample(data,now);
+  const events=upcomingGlowEvents(data,now);
   return <section className="glass-card sky-outlook" aria-labelledby="sky-title"><div className="section-heading"><div><p className="eyebrow">霞光与云层 · 摄影参考</p><h2 id="sky-title">朝霞晚霞与云况分析</h2></div><span>北京时间 · 规则估计</span></div>
     {stale?<p role="status">天气数据已过期，暂停霞光评价和云况分析，请刷新后查看。</p>:<>
-      <div className="glow-grid">{(['sunrise','sunset'] as const).map(kind=>{
-        const event=glowEvent(data,kind,now),sample=event?.sample;
+      <div className="glow-grid">{events.map(({kind,event})=>{
+        const sample=event?.sample;
         const verdict=sample?skyVerdict(sample):null,grade=sample?glowScore(sample):null,Icon=kind==='sunrise'?Sunrise:Sunset;
         return <article className="glow-item" key={kind}><h3><Icon size={20}/>{kind==='sunrise'?'下一场朝霞':'下一场晚霞'}</h3>{event?<><p className="glow-time">{stamp(event.start)}—{clock(event.end)}</p><small>建议守候窗口 · {kind==='sunrise'?'关注东方地平线':'关注西方地平线'}</small>{sample&&grade?<div className={`glow-score glow-${grade.tone}`} style={{'--glow-color':grade.color} as CSSProperties}><div><span>霞光条件评分</span><strong>{grade.score}<small>/100</small></strong></div><div><span>规则估计参考概率</span><b>{grade.probability}%</b></div></div>:null}<p className="glow-verdict">{grade?grade.name:(verdict?.label??'数据不足，暂不评价')}</p>{sample&&verdict&&grade?<><p>{grade.detail} {verdict.reason}</p><Layers sample={sample}/><p className="cloud-meta">能见度 {(sample.visibility/1000).toFixed(1)} km · 降水概率 {sample.rain}%</p><small>采用最接近日出/日落的逐小时预报：{sample.time.replace('T',' ')}（最多相差 30 分钟）</small></>:<p>所需分层云量或能见度缺失，不使用零值替代。</p>}</>:<p>预报范围内暂无可用日出日落时间。</p>}</article>;
       })}</div>

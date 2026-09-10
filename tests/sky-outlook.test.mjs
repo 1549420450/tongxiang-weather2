@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {glowScore,skySample,skyVerdict,glowEvent} from '../lib/sky-outlook.ts';
+import {glowScore,upcomingGlowEvents,skySample,skyVerdict,glowEvent} from '../lib/sky-outlook.ts';
 const sample={low:10,mid:40,high:60,visibility:20000,rain:10,code:2};
 test('outlook rules handle favorable, blocked, clear and dangerous conditions',()=>{
   assert.equal(skyVerdict(sample).label,'值得留意');
@@ -24,4 +24,10 @@ test('past sunrise advances to next day, and its missing weather stays unavailab
   const event=glowEvent(data,'sunrise',Date.parse('2026-09-10T12:00:00+08:00'));
   assert.equal(event.event,'2026-09-11T06:00');assert.equal(event.sample,null);
   assert.equal(event.end-event.start,50*60000);
+});
+test('dawn and dusk cards are sorted by their actual upcoming window',()=>{
+  const morning=Date.parse('2026-09-10T05:00:00+08:00');
+  assert.deepEqual(upcomingGlowEvents(data,morning).map(item=>item.kind),['sunrise','sunset']);
+  const evening=Date.parse('2026-09-10T12:00:00+08:00');
+  assert.deepEqual(upcomingGlowEvents(data,evening).map(item=>item.kind),['sunset','sunrise']);
 });

@@ -49,3 +49,9 @@ export function glowEvent(data: WeatherData, kind:'sunrise'|'sunset', now:number
   const time=+weatherDate(event);
   return {event,start:time+offset[0]*60000,end:time+offset[1]*60000,sample:skySample(data,time)};
 }
+
+export function upcomingGlowEvents(data: WeatherData, now:number) {
+  return (['sunrise','sunset'] as const)
+    .map(kind=>({kind,event:glowEvent(data,kind,now)}))
+    .sort((a,b)=>(a.event?.start ?? Number.POSITIVE_INFINITY)-(b.event?.start ?? Number.POSITIVE_INFINITY));
+}
