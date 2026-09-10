@@ -4,6 +4,7 @@ import { Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Drople
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AstronomyPanel from '../components/astronomy-panel';
 import WeatherScene from '../components/weather-scene';
+import SkyOutlook from '../components/sky-outlook';
 import { Switch } from '../components/ui/switch';
 import { fetchWeather, isStale, validateSnapshot, weatherDate, weatherKind, weatherLabel, type Snapshot } from '../lib/weather';
 
@@ -62,6 +63,7 @@ export default function Home() {
         <div className={`data-status ${stale?'data-stale':''}`} role="status"><span>{stale?'数据已过期 · 动画已停用':'来源：Open-Meteo 天气模型'}</span><span>{delivery} · 抓取 {stamp(snapshot.fetchedAt)}</span></div>
         {error&&<p className="inline-error" role="status">{error}</p>}
         <section className="glass-card sun-card" aria-labelledby="sun-title"><div className="section-heading"><div><p className="eyebrow">今日昼夜</p><h2 id="sun-title">日出与日落</h2></div><span>{sunrise&&sunset?'北京时间':'今日数据尚未更新'}</span></div>{sunrise&&sunset&&<><div className="sun-track"><i style={{left:`${daylightProgress}%`}}/></div><div className="sun-times"><div><Sunrise/><span>日出</span><b>{formatTime(sunrise)}</b></div><div><Sunset/><span>日落</span><b>{formatTime(sunset)}</b></div></div></>}</section>
+        <SkyOutlook data={data} now={clock||Date.now()} stale={stale}/>
         <section className="glass-card" aria-labelledby="hourly-title"><div className="section-heading"><div><p className="eyebrow">天气与拍摄条件</p><h2 id="hourly-title">未来 12 小时</h2></div><span>降雨概率 · 云量</span></div><div className="hourly-list">{hourly.map(item=><article className="hour-item" key={item.time}><span>{formatTime(item.time)}</span><WeatherIcon code={item.code} day={item.day}/><b>{Math.round(item.temperature)}°</b><small>雨 {item.rain}%</small><small>云 {item.cloud}%</small></article>)}</div>{!hourly.length&&<p>暂无有效逐小时数据，请刷新。</p>}</section>
         <section className="glass-card" aria-labelledby="daily-title"><div className="section-heading"><div><p className="eyebrow">一周安排</p><h2 id="daily-title">7 日预报</h2></div></div><div className="daily-list">{data.daily.time.map((day,i)=><article className="day-row" key={day}><b>{day===today?'今天':new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',month:'numeric',day:'numeric'}).format(new Date(`${day}T12:00:00+08:00`))}</b><span className="day-condition"><WeatherIcon code={data.daily.weather_code[i]}/>{weatherLabel(data.daily.weather_code[i])}</span><span className="rain-chance"><Umbrella size={15}/>{data.daily.precipitation_probability_max[i]}%</span><span><strong>{Math.round(data.daily.temperature_2m_max[i])}°</strong> / {Math.round(data.daily.temperature_2m_min[i])}°</span></article>)}</div></section>
       </>:<section className="loading-card" role="status"><Cloud size={38}/><h2>{loading?'正在获取桐乡天气':'天气数据暂不可用'}</h2><p>{loading?'正在读取真实数据，请稍候。':error}</p><p>下方天文数据独立计算，不受天气接口影响。</p></section>}

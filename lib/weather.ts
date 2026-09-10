@@ -1,6 +1,6 @@
 export const LATITUDE = 30.63287;
 export const LONGITUDE = 120.56081;
-export const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,cloud_cover,is_day&hourly=temperature_2m,precipitation_probability,weather_code,is_day,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=Asia%2FShanghai&forecast_days=7&wind_speed_unit=kmh`;
+export const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,cloud_cover,is_day&hourly=temperature_2m,precipitation_probability,weather_code,is_day,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=Asia%2FShanghai&forecast_days=7&wind_speed_unit=kmh`;
 export const labels: Record<number, string> = { 0:'晴朗',1:'晴间少云',2:'局部多云',3:'阴天',45:'雾',48:'雾凇',51:'轻毛毛雨',53:'毛毛雨',55:'强毛毛雨',56:'轻冻毛毛雨',57:'强冻毛毛雨',61:'小雨',63:'中雨',65:'大雨',66:'轻冻雨',67:'强冻雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'小阵雨',81:'中阵雨',82:'强阵雨',85:'小阵雪',86:'强阵雪',95:'雷暴',96:'雷暴伴小冰雹',99:'雷暴伴大冰雹' };
 export const weatherDate = (value: string) => new Date(`${value}+08:00`);
 export const weatherLabel = (code: number) => labels[code] ?? '未知天气';
@@ -9,7 +9,8 @@ export type WeatherData = {
   latitude: number; longitude: number; timezone: string;
   current: { time: string; interval: number; temperature_2m: number; relative_humidity_2m: number; apparent_temperature: number; precipitation: number; weather_code: number; surface_pressure: number; wind_speed_10m: number; wind_direction_10m: number; cloud_cover: number; is_day: number };
   current_units: Record<string, string>;
-  hourly: { time: string[]; temperature_2m: number[]; precipitation_probability: number[]; weather_code: number[]; is_day: number[]; cloud_cover: number[] };
+  hourly: { time: string[]; temperature_2m: number[]; precipitation_probability: number[]; weather_code: number[]; is_day: number[]; cloud_cover: number[]; cloud_cover_low?: (number|null)[]; cloud_cover_mid?: (number|null)[]; cloud_cover_high?: (number|null)[]; visibility?: (number|null)[] };
+  hourly_units?: Record<string,string>;
   daily: { time: string[]; weather_code: number[]; temperature_2m_max: number[]; temperature_2m_min: number[]; precipitation_probability_max: number[]; sunrise: string[]; sunset: string[] };
 };
 export type Snapshot = { fetchedAt: string; source: 'Open-Meteo'; sourceUrl: string; data: WeatherData };
@@ -34,6 +35,13 @@ export function validateWeather(input: unknown): asserts input is WeatherData {
   }
   check(data.hourly.precipitation_probability.every(v => number(v,0,100)) && data.hourly.cloud_cover.every(v => number(v,0,100)) && data.hourly.weather_code.every(v => Object.hasOwn(labels,v)) && data.hourly.is_day.every(v => v === 0 || v === 1), 'Invalid hourly conditions');
   check(Array.isArray(data.daily.time) && data.daily.time.length === 7, 'Expected seven daily forecasts');
+  for (const key of ['cloud_cover_low','cloud_cover_mid','cloud_cover_high','visibility'] as const) {
+    const values = data.hourly[key];
+    if (values !== undefined) {
+      check(Array.isArray(values) && values.length === data.hourly.time.length && values.every(v => v === null || number(v,0,key === 'visibility' ? 1000000 : 100)), `Invalid hourly ${key}`);
+      check(data.hourly_units?.[key] === (key === 'visibility' ? 'm' : '%'), `Unexpected ${key} units`);
+    }
+  }
   for (const key of ['temperature_2m_max','temperature_2m_min','precipitation_probability_max','weather_code','sunrise','sunset'] as const) check(Array.isArray(data.daily[key]) && data.daily[key].length === 7, `Missing daily ${key}`);
   for (let i = 0; i < 7; i++) {
     check(number(data.daily.temperature_2m_min[i],-90,65) && number(data.daily.temperature_2m_max[i],data.daily.temperature_2m_min[i],65), 'Invalid daily temperatures');
