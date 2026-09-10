@@ -1,6 +1,9 @@
-import { Body, Equator, Horizon, Illumination, MoonPhase, Observer, SearchAltitude, SearchRiseSet } from 'astronomy-engine';
+import { Body, DefineStar, Equator, Horizon, Illumination, MoonPhase, Observer, SearchAltitude, SearchRiseSet } from 'astronomy-engine';
 
 export const observer = new Observer(30.63287, 120.56081, 0);
+// Galactic Centre / Sagittarius A*, J2000: NRAO 17:45:40.04, −29:00:28.17.
+export const GALACTIC_CENTER = { ra: 17 + 45/60 + 40.04/3600, dec: -(29 + 28.17/3600) };
+DefineStar(Body.Star1, GALACTIC_CENTER.ra, GALACTIC_CENTER.dec, 26000);
 const DAY = 86400000;
 export const STEP = 5 * 60000;
 export const localDate = (date: Date) => new Date(date.getTime() + 8 * 3600000).toISOString().slice(0, 10);
@@ -88,9 +91,15 @@ export function calculateSky(now: Date) {
   const moonPosition = position(Body.Moon, now);
   const moonIllumination = Illumination(Body.Moon, now).phase_fraction;
   const sunPosition = position(Body.Sun, now);
+  const galaxySamples = timeline.map(slot => ({ ...position(Body.Star1, slot.time), time:slot.time, qualifies:false, sun:slot.sun }));
+  for (const sample of galaxySamples) sample.qualifies=sample.altitude>=10 && sample.sun<=-18;
+  const galaxyQualified=galaxySamples.filter(sample=>sample.qualifies);
+  const galaxyBest=galaxyQualified.reduce<Sample|null>((peak,sample)=>!peak || sample.altitude>peak.altitude?sample:peak,null);
+  const galaxyPosition=position(Body.Star1,now);
   return {
     date, computedAt: now, dusk, dawn, darkStart, darkEnd,
     moon: { phase, name: ['新月附近', '娥眉月', '上弦月附近', '盈凸月', '满月附近', '亏凸月', '下弦月附近', '残月'][phaseIndex], illumination: moonIllumination * 100, limbAngle: moonLimbAngle(moonPosition,sunPosition,phase), altitude: moonPosition.altitude, azimuth: moonPosition.azimuth, rise: SearchRiseSet(Body.Moon, observer, 1, midnight, 1)?.date ?? null, set: SearchRiseSet(Body.Moon, observer, -1, midnight, 1)?.date ?? null },
+    galaxy: { altitude:galaxyPosition.altitude, azimuth:galaxyPosition.azimuth, windows:windows(galaxySamples), best:galaxyBest },
     moonless: windows(timeline.map(slot => ({ time: slot.time, qualifies: slot.sun <= -18 && slot.moon < -1 }))),
     planets: planetData.sort((a, b) => Number(b.windows.length > 0) - Number(a.windows.length > 0)),
   };

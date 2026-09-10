@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Compass, Sparkles } from 'lucide-react';
 import { calculateSky, chinaTime, direction, eventTime, type Window } from '../lib/astronomy';
 import MoonPhaseDiagram from './moon-phase-diagram';
 
@@ -26,11 +27,12 @@ export default function AstronomyPanel() {
       <dl className="astro-facts"><div><dt>今日月出</dt><dd>{time(sky.moon.rise)}</dd></div><div><dt>今日月落</dt><dd>{time(sky.moon.set)}</dd></div><div><dt>月亮当前高度</dt><dd>{sky.moon.altitude.toFixed(0)}° · {sky.moon.altitude < 0 ? '地平线以下' : direction(sky.moon.azimuth)}</dd></div><div><dt>天文黑夜</dt><dd>{sky.darkStart && sky.darkEnd ? `${time(sky.darkStart)}—${time(sky.darkEnd)}` : '本夜无完整天文黑夜'}</dd></div></dl>
     </div>
     <div className="moonless-note"><strong>避开月光拍星空</strong><span>{sky.moonless.length ? sky.moonless.map(range).join('、') : '本夜没有同时满足天文黑夜且月亮落下的时段。'}</span><p>以上时段太阳低于 −18°、月亮低于 −1°；仍需选择云少、远离路灯的机位。</p></div>
+    <section className="galaxy-card" aria-labelledby="galaxy-title"><header><div><p className="eyebrow">银河摄影</p><h3 id="galaxy-title"><Sparkles size={20}/>银河中心（银心）位置</h3></div><span className="galaxy-status">{sky.galaxy.altitude>=0?'地平线以上':'地平线以下'}</span></header><p className="galaxy-lead">此刻高度 <strong>{sky.galaxy.altitude.toFixed(0)}°</strong> · 方位 <strong>{direction(sky.galaxy.azimuth)} {sky.galaxy.azimuth.toFixed(0)}°</strong></p>{sky.galaxy.windows.length&&sky.galaxy.best?<div className="galaxy-window"><Compass size={21}/><div><strong>今晚银河中心拍摄窗口</strong><p>{sky.galaxy.windows.map(range).join(' / ')}</p><small>最高位置：{time(sky.galaxy.best.time)} · 高度 {sky.galaxy.best.altitude.toFixed(0)}° · {direction(sky.galaxy.best.azimuth)} {sky.galaxy.best.azimuth.toFixed(0)}°</small></div></div>:<p className="galaxy-empty">本夜没有同时满足天文黑夜且银河中心高度至少 10°的时段。</p>}<p className="astro-muted">这是银河中心方向，不表示整条银河的构图范围；实际可见性仍受月光、云量、光害和地平线遮挡影响。</p></section>
     <div className="planet-grid">{sky.planets.map(planet => <article className={`planet-card ${planet.windows.length ? '' : 'planet-unavailable'}`} key={planet.body}>
       <header><h3>{planet.name}</h3><span className="planet-status">{planet.windows.length ? '有观测窗口' : '本夜无推荐窗口'}</span></header>
       {planet.best && planet.windows.length ? <><p className="planet-time">{planet.windows.map(range).join(' / ')}</p><dl><div><dt>窗口内最高位置</dt><dd>{time(planet.best.time)} · 高度 {planet.best.altitude.toFixed(0)}°</dd></div><div><dt>届时方位</dt><dd>{direction(planet.best.azimuth)} · {planet.best.azimuth.toFixed(0)}°</dd></div><div><dt>预测视星等</dt><dd>{planet.magnitude.toFixed(1)}</dd></div></dl></> : <p className="planet-empty">未找到天色够暗且高度 ≥10°、持续至少 5 分钟的时段。</p>}
       <p className="equipment-note">{planet.equipment}</p>
     </article>)}</div>
-    <details className="astro-method"><summary>观测条件与计算依据</summary><p>这是几何观测机会，不代表一定能看见。水星至土星要求太阳低于 −6°，天王星和海王星要求低于 −18°，同时行星高度至少 10°。按 5 分钟步长筛选，窗口与最高位置时间约有 5 分钟分辨率。星等越小越亮。</p><p>方位角从正北 0° 顺时针计算，正东 90°、正南 180°。月出月落按今日 00:00—24:00 计算；没有事件时明确标注，月落可能早于月出。低空目标易受建筑、薄雾及光污染影响，适合拍摄的实际时段还需结合云量和视宁度。不要用望远镜或长焦直接搜索太阳附近的目标。</p><p>位置为桐乡市中心 30.63287°N / 120.56081°E，计算海拔 0 米。<a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noreferrer">Astronomy Engine</a> 天文计算 · {chinaTime(sky.computedAt)} 更新 · 每 5 分钟重算。</p></details>
+    <details className="astro-method"><summary>观测条件与计算依据</summary><p>这是几何观测机会，不代表一定能看见。水星至土星要求太阳低于 −6°，天王星和海王星、银河中心要求低于 −18°，同时目标高度至少 10°。按 5 分钟步长筛选，窗口与最高位置时间约有 5 分钟分辨率。星等越小越亮。</p><p>方位角从正北 0° 顺时针计算，正东 90°、正南 180°。月出月落按今日 00:00—24:00 计算；没有事件时明确标注，月落可能早于月出。低空目标易受建筑、薄雾及光污染影响，适合拍摄的实际时段还需结合云量和视宁度。不要用望远镜或长焦直接搜索太阳附近的目标。</p><p>银河中心使用 <a href="https://public.nrao.edu/gallery/galactic-center/" target="_blank" rel="noreferrer">NRAO 公布的 Sagittarius A* J2000 坐标</a>（RA 17h45m40.04s，Dec −29°00′28.17″）。位置为桐乡市中心 30.63287°N / 120.56081°E，计算海拔 0 米。<a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noreferrer">Astronomy Engine</a> 天文计算 · {chinaTime(sky.computedAt)} 更新 · 每 5 分钟重算。</p></details>
   </section>;
 }

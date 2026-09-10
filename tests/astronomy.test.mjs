@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Body } from 'astronomy-engine';
-import { calculateSky, localDate, chinaTime, eventTime, moonPointLit, position, STEP } from '../lib/astronomy.ts';
+import { Body, Equator, Observer } from 'astronomy-engine';
+import { GALACTIC_CENTER, calculateSky, localDate, chinaTime, eventTime, moonPointLit, position, STEP } from '../lib/astronomy.ts';
 
 test('Beijing date and midnight formatting do not use the device timezone', () => {
   const date = new Date('2026-09-09T16:01:00Z');
@@ -22,6 +22,18 @@ test('moon diagram fills the same fraction supplied by Astronomy Engine', () => 
     }
     assert.ok(Math.abs(lit/inside-illumination)<.008, `diagram differs at ${illumination}`);
   }
+});
+test('galactic centre uses the published J2000 coordinate and only reports dark, elevated windows', () => {
+  assert.ok(Math.abs(GALACTIC_CENTER.ra-(17+45/60+40.04/3600))<1e-10);
+  assert.ok(Math.abs(GALACTIC_CENTER.dec-(-29-28.17/3600))<1e-10);
+  const sky=calculateSky(new Date('2026-06-21T12:00:00+08:00'));
+  assert.ok(sky.galaxy.azimuth>=0&&sky.galaxy.azimuth<360&&sky.galaxy.altitude>=-90&&sky.galaxy.altitude<=90);
+  for(const window of sky.galaxy.windows) for(let time=+window.start;time<=+window.end;time+=STEP){
+    assert.ok(position(Body.Sun,new Date(time),false).altitude<=-18);
+    assert.ok(position(Body.Star1,new Date(time)).altitude>=10);
+  }
+  const equator=Equator(Body.Star1,new Date('2026-06-21T12:00:00+08:00'),new Observer(30.63287,120.56081,0),true,true);
+  assert.ok(Number.isFinite(equator.ra)&&Number.isFinite(equator.dec));
 });
 test('seasonal windows satisfy night and altitude criteria', () => {
   for (const date of ['2026-03-20', '2026-06-21', '2026-09-09', '2026-12-21']) {

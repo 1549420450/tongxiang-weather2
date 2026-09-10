@@ -68,6 +68,8 @@
 .planet-unavailable .planet-status { color: #c1cbd9; }
 .equipment-note { font-size: .875rem; line-height: 1.6; color: #b7c6dd; margin-bottom: 0; border-top: 1px solid #43516a; padding-top: 14px; }
 .astro-method { margin-top: 24px; font-size: .875rem; color: #c0cddd; line-height: 1.8; }
+.galaxy-card { margin:28px 0; padding:22px; border:1px solid #546b88; border-radius:18px; background:linear-gradient(135deg,rgba(38,65,98,.58),rgba(17,31,48,.9)); }
+.galaxy-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.galaxy-card h3{display:flex;align-items:center;gap:9px;margin:7px 0 0;font-size:1.25rem}.galaxy-status{padding:7px 10px;border-radius:999px;background:#213c58;color:#d4e8ff;font-size:.85rem;white-space:nowrap}.galaxy-lead{font-size:1.08rem}.galaxy-window{display:flex;gap:14px;padding:14px;border-radius:12px;background:rgba(104,156,205,.12)}.galaxy-window p{margin:5px 0}.galaxy-window small,.galaxy-empty{color:#c1d1e4;line-height:1.7}
 .astro-method summary { cursor: pointer; color: #f1f5fc; font-size: 1rem; }
 .astro-method a { color: #b7e7fa; text-decoration: underline; }
 @media (max-width: 900px) { .planet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .astro-overview { grid-template-columns: 1fr; } }
