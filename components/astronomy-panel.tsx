@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { calculateSky, chinaTime, direction, eventTime, type Window } from '../lib/astronomy';
+import MoonPhaseDiagram from './moon-phase-diagram';
 
 export default function AstronomyPanel() {
   const [sky, setSky] = useState<ReturnType<typeof calculateSky> | null>(null);
@@ -21,7 +22,7 @@ export default function AstronomyPanel() {
     <header className="astro-heading"><div><p className="eyebrow">桐乡 · 天文摄影</p><h2 id="astronomy-title">今晚，抬头看什么</h2><p>{sky.date} 傍晚至次日清晨 · 北京时间</p></div><span className="astro-badge">{visible} 颗行星有观测窗口</span></header>
     {failed && <p role="status">更新暂时失败，以下为 {chinaTime(sky.computedAt)} 的计算。</p>}
     <div className="astro-overview">
-      <article className="astro-moon"><span className="moon-symbol" role="img" aria-label={sky.moon.name}>{sky.moon.icon}</span><div><p className="eyebrow">此刻月相</p><h3>{sky.moon.name}</h3><p>照亮比例 <strong>{sky.moon.illumination.toFixed(1)}%</strong></p><p className="astro-muted">示意图，非实时照片或实际旋转方向</p></div></article>
+      <article className="astro-moon"><MoonPhaseDiagram illumination={sky.moon.illumination/100} limbAngle={sky.moon.limbAngle} label={sky.moon.name}/><div><p className="eyebrow">此刻月相</p><h3>{sky.moon.name}</h3><p>照亮比例 <strong>{sky.moon.illumination.toFixed(1)}%</strong></p><p className="astro-muted">亮面朝向按桐乡当地太阳与月亮位置计算；非月面照片。</p></div></article>
       <dl className="astro-facts"><div><dt>今日月出</dt><dd>{time(sky.moon.rise)}</dd></div><div><dt>今日月落</dt><dd>{time(sky.moon.set)}</dd></div><div><dt>月亮当前高度</dt><dd>{sky.moon.altitude.toFixed(0)}° · {sky.moon.altitude < 0 ? '地平线以下' : direction(sky.moon.azimuth)}</dd></div><div><dt>天文黑夜</dt><dd>{sky.darkStart && sky.darkEnd ? `${time(sky.darkStart)}—${time(sky.darkEnd)}` : '本夜无完整天文黑夜'}</dd></div></dl>
     </div>
     <div className="moonless-note"><strong>避开月光拍星空</strong><span>{sky.moonless.length ? sky.moonless.map(range).join('、') : '本夜没有同时满足天文黑夜且月亮落下的时段。'}</span><p>以上时段太阳低于 −18°、月亮低于 −1°；仍需选择云少、远离路灯的机位。</p></div>

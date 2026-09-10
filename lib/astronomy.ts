@@ -14,6 +14,26 @@ export function position(body: Body, date: Date, apparent = true) {
   return Horizon(date, observer, equator.ra, equator.dec, apparent ? 'normal' : undefined);
 }
 export const direction = (azimuth: number) => ['北', '东北', '东', '东南', '南', '西南', '西', '西北'][Math.round(azimuth / 45) % 8];
+type HorizonPoint = { altitude:number; azimuth:number };
+type Vector = { x:number; y:number; z:number };
+const dot=(a:Vector,b:Vector)=>a.x*b.x+a.y*b.y+a.z*b.z;
+const unit=(value:Vector):Vector|null=>{const length=Math.hypot(value.x,value.y,value.z);return length>1e-10?{x:value.x/length,y:value.y/length,z:value.z/length}:null;};
+function horizonVector(point:HorizonPoint):Vector { const altitude=point.altitude*Math.PI/180,azimuth=point.azimuth*Math.PI/180; return {x:Math.cos(altitude)*Math.sin(azimuth),y:Math.cos(altitude)*Math.cos(azimuth),z:Math.sin(altitude)}; }
+/** Position angle of the bright limb in the local sky, measured from screen-right toward screen-up. */
+export function moonLimbAngle(moon:HorizonPoint,sun:HorizonPoint,fallbackPhase:number) {
+  const m=horizonVector(moon),s=horizonVector(sun),towardSun=unit({x:s.x-m.x*dot(s,m),y:s.y-m.y*dot(s,m),z:s.z-m.z*dot(s,m)});
+  const up=unit({x:-m.x*m.z,y:-m.y*m.z,z:1-m.z*m.z});
+  if (!towardSun || !up) return fallbackPhase<180?0:Math.PI;
+  const right={x:up.y*m.z-up.z*m.y,y:up.z*m.x-up.x*m.z,z:up.x*m.y-up.y*m.x};
+  return Math.atan2(dot(towardSun,up),dot(towardSun,right));
+}
+/** Returns whether a visible point on the lunar disc is sunlit in the diagram's local-sky orientation. */
+export function moonPointLit(x:number,y:number,illumination:number,limbAngle:number) {
+  const radiusSquared=x*x+y*y;if(radiusSquared>1)return false;
+  const z=Math.sqrt(1-radiusSquared),sunZ=Math.max(-1,Math.min(1,illumination*2-1));
+  const tangent=Math.sqrt(Math.max(0,1-sunZ*sunZ));
+  return x*Math.cos(limbAngle)*tangent+y*Math.sin(limbAngle)*tangent+z*sunZ>0;
+}
 type Sample = { time: Date; altitude: number; azimuth: number };
 export type Window = { start: Date; end: Date };
 function windows(samples: { time: Date; qualifies: boolean }[]) {
@@ -66,9 +86,11 @@ export function calculateSky(now: Date) {
   const phase = MoonPhase(now);
   const phaseIndex = Math.floor((phase + 22.5) / 45) % 8;
   const moonPosition = position(Body.Moon, now);
+  const moonIllumination = Illumination(Body.Moon, now).phase_fraction;
+  const sunPosition = position(Body.Sun, now);
   return {
     date, computedAt: now, dusk, dawn, darkStart, darkEnd,
-    moon: { phase, name: ['新月附近', '娥眉月', '上弦月附近', '盈凸月', '满月附近', '亏凸月', '下弦月附近', '残月'][phaseIndex], icon: ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'][phaseIndex], illumination: Illumination(Body.Moon, now).phase_fraction * 100, altitude: moonPosition.altitude, azimuth: moonPosition.azimuth, rise: SearchRiseSet(Body.Moon, observer, 1, midnight, 1)?.date ?? null, set: SearchRiseSet(Body.Moon, observer, -1, midnight, 1)?.date ?? null },
+    moon: { phase, name: ['新月附近', '娥眉月', '上弦月附近', '盈凸月', '满月附近', '亏凸月', '下弦月附近', '残月'][phaseIndex], illumination: moonIllumination * 100, limbAngle: moonLimbAngle(moonPosition,sunPosition,phase), altitude: moonPosition.altitude, azimuth: moonPosition.azimuth, rise: SearchRiseSet(Body.Moon, observer, 1, midnight, 1)?.date ?? null, set: SearchRiseSet(Body.Moon, observer, -1, midnight, 1)?.date ?? null },
     moonless: windows(timeline.map(slot => ({ time: slot.time, qualifies: slot.sun <= -18 && slot.moon < -1 }))),
     planets: planetData.sort((a, b) => Number(b.windows.length > 0) - Number(a.windows.length > 0)),
   };

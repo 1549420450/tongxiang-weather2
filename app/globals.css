@@ -50,7 +50,7 @@
 .astro-overview { display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; margin: 25px 0; }
 .astro-moon { display: flex; align-items: center; gap: 20px; }
 .astro-moon h3 { margin: 8px 0; font-size: 1.5rem; }
-.moon-symbol { font-size: 5rem; flex-shrink: 0; }
+.moon-phase-diagram { width: 8.25rem; height: 8.25rem; flex-shrink: 0; }
 .astro-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin: 0; align-content: center; }
 .astro-panel dt { color: #b7c6dd; font-size: .875rem; margin-bottom: 6px; }
 .astro-panel dd { margin: 0; font-size: 1rem; }
@@ -71,7 +71,7 @@
 .astro-method summary { cursor: pointer; color: #f1f5fc; font-size: 1rem; }
 .astro-method a { color: #b7e7fa; text-decoration: underline; }
 @media (max-width: 900px) { .planet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .astro-overview { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .planet-grid { grid-template-columns: 1fr; } .astro-facts { grid-template-columns: 1fr; } .moon-symbol { font-size: 3.5rem; } }
+@media (max-width: 520px) { .planet-grid { grid-template-columns: 1fr; } .astro-facts { grid-template-columns: 1fr; } .moon-phase-diagram { width: 6.25rem; height: 6.25rem; } }
 
 :root { --background:#cce7ee; --foreground:#10222a; --card:rgba(255,255,255,.5); --card-foreground:#10222a; --border:rgba(255,255,255,.54); --ring:rgba(16,34,42,.3); --radius:1.25rem; }
 *{box-sizing:border-box} html{background:#bcdde7} body{margin:0;font-family:var(--font-geist-sans),"Microsoft YaHei",sans-serif;color:#10222a} button{font:inherit}
