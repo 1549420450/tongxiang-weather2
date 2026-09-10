@@ -88,6 +88,8 @@
 .sky-outlook p{font-size:1rem;line-height:1.7;margin:12px 0;color:#d0dbe9}
 .sky-outlook small{font-size:.875rem;color:#aebfd2;line-height:1.6}
 .sky-outlook .glow-time{font-weight:600;color:#f2ddbf}.sky-outlook .glow-verdict{font-size:1.3rem;font-weight:650;color:#f3d19b}
+.glow-score{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;margin:18px 0;padding:15px 16px;border:1px solid color-mix(in srgb,var(--glow-color) 65%,transparent);border-radius:14px;background:linear-gradient(110deg,color-mix(in srgb,var(--glow-color) 22%,transparent),transparent)}
+.glow-score div{display:grid;gap:3px}.glow-score div:last-child{text-align:right}.glow-score span{font-size:.82rem;color:#d6e0ec}.glow-score strong{font-size:2rem;line-height:1;color:var(--glow-color)}.glow-score strong small{font-size:.9rem;color:#cbd8e8}.glow-score b{font-size:1.35rem;color:var(--glow-color)}
 .cloud-layers{display:grid;gap:10px;margin:18px 0}.cloud-layers>div{display:grid;grid-template-columns:4rem 1fr 3rem;gap:10px;align-items:center;font-size:.9rem}.cloud-layers meter{width:100%;height:12px;accent-color:#94b6da}.cloud-layers b{text-align:right}
 .cloud-summary{margin-top:24px;padding-top:24px;border-top:1px solid #ffffff20}.glow-method{margin-top:24px;color:#b8c9db;font-size:.9rem}.glow-method summary{cursor:pointer}.glow-method a{color:#c2defb;text-decoration:underline}
 @media(max-width:640px){.glow-grid{grid-template-columns:1fr}.glow-item{padding:18px}.sky-outlook .section-heading{flex-wrap:wrap;gap:12px}}
